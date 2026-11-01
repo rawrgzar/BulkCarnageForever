@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="BulkCarnageForever.Console/BulkCarnageForever.Console.csproj" Id="0690dd03-a50e-40b8-8944-069940481238" />
+  <Project Path="BulkCarnageForever.V10.Core/BulkCarnageForever.V10.Core.csproj" Id="5b24ad16-96a6-4c3e-b2da-0f1a2109abd9" />
+  <Project Path="BulkCarnageForever.V10.DAL/BulkCarnageForever.V10.DAL.csproj" Id="1fdb1251-7eef-4912-9b33-eb435b5b09e9" />
+  <Project Path="BulkCarnageForever.V10.Desktop/BulkCarnageForever.V10.Desktop.csproj" Id="9dfaf5b3-63ad-43b3-8255-83a7557fad78" />
+</Solution>
