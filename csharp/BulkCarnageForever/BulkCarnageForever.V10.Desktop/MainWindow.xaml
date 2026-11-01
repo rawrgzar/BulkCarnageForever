@@ -1,295 +1,416 @@
 <Window x:Class="BulkCarnageForever.V10.Desktop.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-        Title="BulkCarnageForever · Food Library"
-        Width="1390" Height="870" MinWidth="980" MinHeight="640"
-        WindowStartupLocation="CenterScreen"
-        Background="#0D121B" Foreground="#EFF5FA"
-        FontFamily="Segoe UI" Loaded="Window_Loaded"
-        UseLayoutRounding="True" SnapsToDevicePixels="True">
-
-    <Window.Resources>
-        <SolidColorBrush x:Key="Surface" Color="#172231"/>
-        <SolidColorBrush x:Key="SurfaceRaised" Color="#202F40"/>
-        <SolidColorBrush x:Key="Line" Color="#334253"/>
-        <SolidColorBrush x:Key="Accent" Color="#BDF473"/>
-        <SolidColorBrush x:Key="Muted" Color="#94A6BA"/>
-
-        <Style x:Key="CaptionLabel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{StaticResource Muted}"/>
-            <Setter Property="Margin" Value="0,0,0,9"/>
-        </Style>
-
-        <Style x:Key="CatalogCardItem" TargetType="ListBoxItem">
-            <Setter Property="Margin" Value="7"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Chrome" Background="#1B2838"
-                                BorderBrush="#304255" BorderThickness="1"
-                                CornerRadius="14" Padding="17">
-                            <ContentPresenter HorizontalAlignment="Stretch"
-                                              VerticalAlignment="Stretch"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="#26384A"/>
-                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#739D65"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="#26392F"/>
-                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#BDF473"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
-
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="264"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-
-        <!-- Left navigation and catalog filters -->
-        <Border Grid.Column="0" Background="#111A26" BorderBrush="#283849"
-                BorderThickness="0,0,1,0">
-            <Grid Margin="22,27,22,20">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Row="0" Margin="3,0,0,40">
-                    <Border Width="44" Height="44" CornerRadius="13"
-                            Background="#30472C" HorizontalAlignment="Left"
-                            Margin="0,0,0,15">
-                        <TextBlock Text="B" FontSize="25" FontWeight="Bold"
-                                   Foreground="#BDF473" HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"/>
-                    </Border>
-                    <TextBlock Text="BULK CARNAGE" FontSize="19" FontWeight="Bold"
-                               Foreground="#F6FAFF"/>
-                    <TextBlock Text="FOREVER  /  V10" FontSize="12" FontWeight="SemiBold"
-                               Foreground="#BDF473" Margin="0,4,0,0"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1">
-                    <TextBlock Text="WORKSPACE" Style="{StaticResource CaptionLabel}"
-                               Margin="1,0,0,12"/>
-                    <Border Background="#273C30" BorderBrush="#486647"
-                            BorderThickness="1" CornerRadius="9"
-                            Padding="12" Margin="0,0,0,8">
-                        <TextBlock Text="▦   Food Library" Foreground="#D9F8B9"
-                                   FontSize="14" FontWeight="SemiBold"/>
-                    </Border>
-                    <ui:Button Content="◷   Daily Nutrition" Appearance="Secondary"
-                               Height="43" HorizontalAlignment="Stretch"
-                               HorizontalContentAlignment="Left"
-                               Click="OpenMeals_Click" Margin="0,0,0,32"/>
-
-                    <TextBlock Text="FILTER YOUR FOODS" Style="{StaticResource CaptionLabel}"
-                               Margin="1,0,0,17"/>
-                    <TextBlock Text="Category" Style="{StaticResource CaptionLabel}"/>
-                    <ComboBox x:Name="CategoryComboBox" Height="42"
-                                 HorizontalAlignment="Stretch" FontSize="13"
-                                 SelectionChanged="CategoryComboBox_SelectionChanged"/>
-                    <TextBlock Text="Brand" Style="{StaticResource CaptionLabel}"
-                               Margin="0,22,0,9"/>
-                    <ComboBox x:Name="BrandComboBox" Height="42"
-                                 HorizontalAlignment="Stretch" FontSize="13"
-                                 SelectionChanged="BrandComboBox_SelectionChanged"/>
-
-                    <Border BorderBrush="#2D3D4F" BorderThickness="0,1,0,0"
-                            Margin="0,32,0,20"/>
-                    <TextBlock Text="LOCAL DATABASE" Style="{StaticResource CaptionLabel}"/>
-                    <StackPanel Orientation="Horizontal" Margin="2,5,0,0">
-                        <Ellipse Width="9" Height="9" Fill="#BDF473"
-                                 VerticalAlignment="Center" Margin="0,0,9,0"/>
-                        <TextBlock Text="SQLite · Offline" Foreground="#D7E3EE"
-                                   FontSize="13" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </StackPanel>
-
-                <Border Grid.Row="2" Background="#192736" CornerRadius="10" Padding="14">
-                    <StackPanel>
-                        <TextBlock Text="NO CLOUD. NO BS." Foreground="#BDF473"
-                                   FontWeight="Bold" FontSize="12"/>
-                        <TextBlock Text="Your nutrition. Your machine."
-                                   Foreground="#94A6BA" FontSize="11" Margin="0,6,0,0"
-                                   TextWrapping="Wrap"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+ Title="Bulk Carnage Forever" Width="1540" Height="980" MinWidth="1240" MinHeight="860"
+ Background="#0D141E" Foreground="#F2F7FD" FontFamily="Segoe UI" WindowStartupLocation="CenterScreen"
+ UseLayoutRounding="True" Loaded="Window_Loaded">
+ <Window.Resources>
+  <ResourceDictionary>
+   <ResourceDictionary.MergedDictionaries>
+    <ui:ThemesDictionary Theme="Dark"/><ui:ControlsDictionary/>
+   </ResourceDictionary.MergedDictionaries>
+   <SolidColorBrush x:Key="Lime" Color="#BDF473"/>
+   <SolidColorBrush x:Key="Muted" Color="#9CB2C9"/>
+   <SolidColorBrush x:Key="Teal" Color="#79D8C8"/>
+   <SolidColorBrush x:Key="Amber" Color="#FFC078"/>
+   <SolidColorBrush x:Key="Violet" Color="#BCA7F5"/>
+   <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#F2F7FD"/>
+   <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#9CB2C9"/>
+   <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#BDF473"/>
+   <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#C9F795"/>
+   <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#A8DC65"/>
+   <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#101C15"/>
+   <SolidColorBrush x:Key="ComboBoxBackground" Color="#25374A"/>
+   <SolidColorBrush x:Key="ComboBoxForeground" Color="#F2F7FD"/>
+   <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#1A2939"/>
+   <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#405970"/>
+   <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="#BDF473"/>
+   <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#304A36"/>
+   <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#BDF473"/>
+   <SolidColorBrush x:Key="ComboBoxItemPillFillBrush" Color="#BDF473"/>
+   <Style x:Key="Caption" TargetType="TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource Muted}"/><Setter Property="FontSize" Value="12"/>
+   </Style>
+   <Style x:Key="Eyebrow" TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+    <Setter Property="Foreground" Value="{StaticResource Lime}"/><Setter Property="FontSize" Value="10"/><Setter Property="FontWeight" Value="Bold"/>
+   </Style>
+   <Style x:Key="Surface" TargetType="Border">
+    <Setter Property="Background" Value="#1A2939"/><Setter Property="BorderBrush" Value="#30465A"/>
+    <Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="16"/><Setter Property="Padding" Value="20"/>
+   </Style>
+   <Style x:Key="Action" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+    <Setter Property="Background" Value="#203448"/><Setter Property="Foreground" Value="#F2F7FD"/>
+    <Setter Property="BorderBrush" Value="#30465A"/><Setter Property="Padding" Value="12,8"/><Setter Property="Cursor" Value="Hand"/>
+   </Style>
+   <Style x:Key="Primary" TargetType="ui:Button" BasedOn="{StaticResource Action}">
+    <Setter Property="Background" Value="{StaticResource Lime}"/><Setter Property="BorderBrush" Value="{StaticResource Lime}"/>
+    <Setter Property="Foreground" Value="#101C15"/><Setter Property="FontWeight" Value="Bold"/>
+   </Style>
+   <Style x:Key="Nav" TargetType="ui:Button" BasedOn="{StaticResource Action}">
+    <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="Padding" Value="14,13"/><Setter Property="Margin" Value="0,0,0,8"/>
+    <Setter Property="Background" Value="Transparent"/><Setter Property="BorderBrush" Value="Transparent"/>
+   </Style>
+   <Style x:Key="Input" TargetType="ui:TextBox" BasedOn="{StaticResource {x:Type ui:TextBox}}">
+    <Setter Property="Background" Value="#25374A"/><Setter Property="Foreground" Value="#F2F7FD"/>
+    <Setter Property="BorderBrush" Value="#30465A"/><Setter Property="MinHeight" Value="38"/>
+   </Style>
+   <!-- Use the library's actual template, not the operating system's light template. -->
+   <Style x:Key="DarkComboBox" TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
+    <Setter Property="Background" Value="#25374A"/><Setter Property="Foreground" Value="#F2F7FD"/>
+    <Setter Property="BorderBrush" Value="#30465A"/><Setter Property="MinHeight" Value="38"/>
+    <Setter Property="ItemContainerStyle" Value="{StaticResource DefaultComboBoxItemStyle}"/>
+    <Setter Property="MaxDropDownHeight" Value="320"/>
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+   </Style>
+   <Style x:Key="Segment" TargetType="RadioButton">
+    <Setter Property="Foreground" Value="{StaticResource Muted}"/><Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+     <Border x:Name="SegmentBorder" Background="Transparent" CornerRadius="8" Padding="16,9" Margin="2">
+      <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+     </Border>
+     <ControlTemplate.Triggers>
+      <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="SegmentBorder" Property="Background" Value="#24384A"/></Trigger>
+      <Trigger Property="IsChecked" Value="True">
+       <Setter TargetName="SegmentBorder" Property="Background" Value="#304A36"/>
+       <Setter Property="Foreground" Value="{StaticResource Lime}"/><Setter Property="FontWeight" Value="SemiBold"/>
+      </Trigger>
+      <Trigger Property="IsKeyboardFocused" Value="True">
+       <Setter TargetName="SegmentBorder" Property="BorderBrush" Value="{StaticResource Lime}"/>
+       <Setter TargetName="SegmentBorder" Property="BorderThickness" Value="1"/>
+      </Trigger>
+     </ControlTemplate.Triggers>
+    </ControlTemplate></Setter.Value></Setter>
+   </Style>
+   <Style x:Key="CardAction" TargetType="ui:Button" BasedOn="{StaticResource Action}">
+    <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="VerticalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="VerticalContentAlignment" Value="Stretch"/>
+    <Setter Property="Border.CornerRadius" Value="14"/>
+    <Setter Property="Background" Value="#1A2939"/><Setter Property="Padding" Value="16"/><Setter Property="Margin" Value="5"/>
+   </Style>
+   <Style x:Key="ResultItem" TargetType="ListBoxItem">
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Foreground" Value="#F2F7FD"/>
+    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
+     <Border x:Name="ResultBorder" Padding="12,10" Margin="0,0,0,4" CornerRadius="9" Background="Transparent" BorderThickness="1" BorderBrush="Transparent"><ContentPresenter/></Border>
+     <ControlTemplate.Triggers>
+      <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ResultBorder" Property="Background" Value="#263E50"/></Trigger>
+      <Trigger Property="IsSelected" Value="True">
+       <Setter TargetName="ResultBorder" Property="Background" Value="#294437"/>
+       <Setter TargetName="ResultBorder" Property="BorderBrush" Value="#5F8751"/>
+      </Trigger>
+     </ControlTemplate.Triggers>
+    </ControlTemplate></Setter.Value></Setter>
+   </Style>
+   <Style x:Key="DayAction" TargetType="ui:Button" BasedOn="{StaticResource CardAction}">
+    <Style.Triggers>
+     <DataTrigger Binding="{Binding IsSelected}" Value="True">
+      <Setter Property="BorderBrush" Value="{StaticResource Lime}"/>
+      <Setter Property="Background" Value="#233C32"/>
+     </DataTrigger>
+    </Style.Triggers>
+   </Style>
+   <DataTemplate x:Key="EntryTemplate">
+    <Border BorderBrush="#30465A" BorderThickness="0,0,0,1" Padding="0,10">
+     <DockPanel>
+      <ui:Button DockPanel.Dock="Right" Content="×" Tag="{Binding Id}" Click="Remove_Click" Style="{StaticResource Action}" Padding="7,1" Margin="8,0,0,0" VerticalAlignment="Center" ToolTip="Remove food"/>
+      <StackPanel>
+       <TextBlock Text="{Binding FoodName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding FoodName}"/>
+       <TextBlock Text="{Binding Details}" Style="{StaticResource Caption}" FontSize="11" Margin="0,5,0,0" TextWrapping="Wrap"/>
+      </StackPanel>
+     </DockPanel>
+    </Border>
+   </DataTemplate>
+   <DataTemplate x:Key="DayCard">
+    <ui:Button Click="Day_Click" Tag="{Binding Date}" Style="{StaticResource DayAction}" Padding="16,12">
+     <StackPanel>
+      <DockPanel><TextBlock Text="{Binding SelectionLabel}" DockPanel.Dock="Right" Foreground="{StaticResource Lime}" FontSize="10"/><TextBlock Text="{Binding Heading}" Style="{StaticResource Eyebrow}"/></DockPanel>
+      <TextBlock Text="{Binding DateLabel}" FontSize="18" FontWeight="SemiBold" Margin="0,6,0,8"/>
+      <TextBlock Text="{Binding CaloriesLabel}" FontSize="26" FontWeight="Bold" Foreground="{Binding StatusBrush}"/>
+      <TextBlock Text="{Binding TargetLabel}" Style="{StaticResource Caption}" FontSize="11" Margin="0,3,0,6"/>
+      <ProgressBar Maximum="100" Value="{Binding Percent}" Height="4" Foreground="{Binding StatusBrush}" Background="#2C3E4F"/>
+      <TextBlock Text="{Binding Status}" Foreground="{Binding StatusBrush}" Margin="0,6,0,8" TextWrapping="Wrap" FontSize="11"/>
+      <TextBlock Text="{Binding ProteinLabel}" Foreground="{StaticResource Teal}" FontSize="11" TextWrapping="Wrap"/>
+      <TextBlock Text="{Binding CarbsLabel}" Foreground="{StaticResource Amber}" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0"/>
+      <TextBlock Text="{Binding FatLabel}" Foreground="{StaticResource Violet}" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0"/>
+     </StackPanel>
+    </ui:Button>
+   </DataTemplate>
+   <DataTemplate x:Key="DailyTemplate">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+     <Grid MinHeight="{Binding WorkspaceHeight, RelativeSource={RelativeSource AncestorType={x:Type Window}}}">
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="2*" MinHeight="400"/><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="260"/></Grid.RowDefinitions>
+      <DockPanel Margin="5,4,5,10"><TextBlock Text="{Binding DateLabel}" DockPanel.Dock="Right" Style="{StaticResource Caption}"/><TextBlock Text="YOUR MEALS" Style="{StaticResource Eyebrow}"/></DockPanel>
+      <ItemsControl Grid.Row="1" ItemsSource="{Binding Meals}">
+       <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2" Rows="2"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+       <ItemsControl.ItemTemplate><DataTemplate>
+        <Border Style="{StaticResource Surface}" Margin="5" MinHeight="185">
+         <Grid>
+          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+          <DockPanel>
+           <TextBlock Text="{Binding Summary}" DockPanel.Dock="Right" Foreground="{StaticResource Lime}" FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
+           <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold"/>
+          </DockPanel>
+          <StackPanel Grid.Row="1" Margin="0,7,0,10">
+           <TextBlock Text="Nothing logged yet. A fresh start." Margin="0,15" TextWrapping="Wrap">
+            <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+             <Setter Property="Visibility" Value="Collapsed"/>
+             <Style.Triggers><DataTrigger Binding="{Binding IsEmpty}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>
+            </Style></TextBlock.Style>
+           </TextBlock>
+           <ItemsControl ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource EntryTemplate}"/>
+          </StackPanel>
+          <ui:Button Grid.Row="2" Content="{Binding AddLabel}" Tag="{Binding Meal}" Click="AddMeal_Click" Style="{StaticResource Action}" Foreground="{StaticResource Lime}" HorizontalAlignment="Left" Padding="10,5" FontSize="11"/>
+         </Grid>
         </Border>
-
-        <!-- Main content -->
-        <Grid Grid.Column="1" Margin="30,26,30,24">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <Grid Grid.Row="0" Margin="0,0,0,24">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Text="FOOD EXPLORER" FontSize="11" FontWeight="Bold"
-                               Foreground="#BDF473" Margin="1,0,0,8"/>
-                    <TextBlock Text="Find your fuel." FontSize="34" FontWeight="Bold"
-                               Foreground="#F5F8FC"/>
-                    <TextBlock Text="Explore foods, compare macros, and build your day."
-                               FontSize="14" Foreground="#98A9BD" Margin="0,7,0,0"/>
-                </StackPanel>
-                <Border Grid.Column="1" Background="#243B2D" CornerRadius="18"
-                        VerticalAlignment="Center" Padding="14,9">
-                    <TextBlock Text="●  OFFLINE FIRST" FontWeight="SemiBold"
-                               Foreground="#BDF473" FontSize="11"/>
-                </Border>
-            </Grid>
-
-            <Border Grid.Row="1" Background="#1A2737" BorderBrush="#304255"
-                    BorderThickness="1" CornerRadius="13" Padding="17,15"
-                    Margin="0,0,0,23">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="Nutrition catalog" Foreground="#F3F7FC"
-                                   FontSize="17" FontWeight="SemiBold"/>
-                        <TextBlock Text="Search a food name, or narrow by category and brand."
-                                   Foreground="#94A6BA" FontSize="12" Margin="0,4,0,0"/>
-                    </StackPanel>
-                    <TextBlock Grid.Column="1" Text="100% LOCAL" Foreground="#BDF473"
-                               FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                </Grid>
-            </Border>
-
-            <Grid Grid.Row="2" Margin="0,0,0,16">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <TextBox x:Name="SearchTextBox" Grid.Row="0" Height="46"
-                            ToolTip="Search food names"
-                            FontSize="14"
-                            TextChanged="SearchTextBox_TextChanged"/>
-                <Grid Grid.Row="1" Margin="1,21,1,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Food library" Foreground="#F3F7FC"
-                                   FontSize="21" FontWeight="SemiBold"/>
-                        <TextBlock Text="  /  browse" Foreground="#8195AC"
-                                   FontSize="12" VerticalAlignment="Bottom" Margin="0,0,0,3"/>
-                    </StackPanel>
-                    <Border Grid.Column="1" CornerRadius="8" Background="#263C30"
-                            Padding="12,7">
-                        <TextBlock x:Name="CountLabel" Foreground="#BDF473"
-                                   FontWeight="SemiBold" FontSize="12"/>
-                    </Border>
-                </Grid>
-            </Grid>
-
-            <Border Grid.Row="3" Background="#101924" BorderBrush="#263749"
-                    BorderThickness="1" CornerRadius="14" ClipToBounds="True">
-                <ListBox x:Name="FoodGrid" Background="Transparent"
-                         BorderThickness="0" Padding="11"
-                         ItemContainerStyle="{StaticResource CatalogCardItem}"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         ScrollViewer.CanContentScroll="False">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel ItemWidth="302" ItemHeight="212"/>
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="25"/>
-                                    <RowDefinition Height="49"/>
-                                    <RowDefinition Height="25"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0" Text="{Binding GroupName}"
-                                           FontSize="11" FontWeight="SemiBold"
-                                           Foreground="#BDF473" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Grid.Row="1" Text="{Binding RecipeName}"
-                                           FontSize="15" FontWeight="SemiBold"
-                                           Foreground="#F4F8FC" TextWrapping="Wrap"
-                                           TextTrimming="CharacterEllipsis" MaxHeight="43"/>
-                                <TextBlock Grid.Row="2" Text="{Binding BrandType}"
-                                           FontSize="12" Foreground="#99ABC0"
-                                           TextTrimming="CharacterEllipsis"/>
-                                <Grid Grid.Row="4">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="1"/>
-                                        <RowDefinition Height="12"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Border Grid.Row="0" Grid.ColumnSpan="4" Background="#344659"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="CAL"
-                                               Foreground="#8FA2B8" FontSize="10" TextAlignment="Center"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="PROTEIN"
-                                               Foreground="#8FA2B8" FontSize="10" TextAlignment="Center"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="2" Text="CARBS"
-                                               Foreground="#8FA2B8" FontSize="10" TextAlignment="Center"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="3" Text="FATS"
-                                               Foreground="#8FA2B8" FontSize="10" TextAlignment="Center"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="0"
-                                               Text="{Binding CaloriesPerServing, StringFormat={}{0:0.#}}"
-                                               Foreground="#BDF473" FontSize="16" FontWeight="Bold"
-                                               TextAlignment="Center" Margin="0,5,0,0"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="1"
-                                               Text="{Binding Protein, StringFormat={}{0:0.#}g}"
-                                               Foreground="#F2F7FC" FontSize="15" FontWeight="SemiBold"
-                                               TextAlignment="Center" Margin="0,5,0,0"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="2"
-                                               Text="{Binding Carbs, StringFormat={}{0:0.#}g}"
-                                               Foreground="#F2F7FC" FontSize="15" FontWeight="SemiBold"
-                                               TextAlignment="Center" Margin="0,5,0,0"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="3"
-                                               Text="{Binding Fats, StringFormat={}{0:0.#}g}"
-                                               Foreground="#F2F7FC" FontSize="15" FontWeight="SemiBold"
-                                               TextAlignment="Center" Margin="0,5,0,0"/>
-                                </Grid>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Border>
+       </DataTemplate></ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBlock Grid.Row="2" Text="RECENT DAYS" Style="{StaticResource Eyebrow}" Margin="5,20,0,8"/>
+      <ItemsControl Grid.Row="3" ItemsSource="{Binding Days}" ItemTemplate="{StaticResource DayCard}">
+       <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="3"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+      </ItemsControl>
+     </Grid>
+    </ScrollViewer>
+   </DataTemplate>
+   <DataTemplate x:Key="WeekTemplate">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+     <ItemsControl ItemsSource="{Binding}" Height="{Binding WorkspaceHeight, RelativeSource={RelativeSource AncestorType={x:Type Window}}}">
+      <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="1" Rows="7"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate><DataTemplate>
+       <ui:Button Click="Day_Click" Tag="{Binding Date}" Style="{StaticResource DayAction}" Padding="16,12">
+        <Grid>
+         <Grid.ColumnDefinitions><ColumnDefinition Width="85"/><ColumnDefinition Width="85"/><ColumnDefinition Width="*"/><ColumnDefinition Width="105"/></Grid.ColumnDefinitions>
+         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+         <StackPanel Grid.RowSpan="2">
+          <TextBlock Text="{Binding Heading}" Style="{StaticResource Eyebrow}" FontSize="9"/>
+          <TextBlock Text="{Binding DateLabel}" FontWeight="SemiBold" Margin="0,5,0,0"/>
+          <TextBlock Text="{Binding SelectionLabel}" Foreground="{StaticResource Lime}" FontSize="9" Margin="0,4,0,0"/>
+         </StackPanel>
+         <TextBlock Grid.Column="1" Text="{Binding CaloriesLabel}" FontSize="23" FontWeight="Bold" Foreground="{Binding StatusBrush}" VerticalAlignment="Center"/>
+         <ProgressBar Grid.Column="2" Maximum="100" Value="{Binding Percent}" Height="5" VerticalAlignment="Center" Margin="10,0,16,0" Foreground="{Binding StatusBrush}" Background="#2C3E4F"/>
+         <TextBlock Grid.Column="3" Text="{Binding Status}" Foreground="{Binding StatusBrush}" FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center"/>
+         <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding CompactMacros}" Style="{StaticResource Caption}" FontSize="11" Margin="0,7,0,0"/>
         </Grid>
+       </ui:Button>
+      </DataTemplate></ItemsControl.ItemTemplate>
+     </ItemsControl>
+    </ScrollViewer>
+   </DataTemplate>
+   <DataTemplate x:Key="MonthTemplate">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+     <Grid Height="{Binding WorkspaceHeight, RelativeSource={RelativeSource AncestorType={x:Type Window}}}">
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+      <UniformGrid Columns="7" Margin="8,5,8,10">
+       <TextBlock Text="MON" Style="{StaticResource Eyebrow}"/><TextBlock Text="TUE" Style="{StaticResource Eyebrow}"/><TextBlock Text="WED" Style="{StaticResource Eyebrow}"/><TextBlock Text="THU" Style="{StaticResource Eyebrow}"/><TextBlock Text="FRI" Style="{StaticResource Eyebrow}"/><TextBlock Text="SAT" Style="{StaticResource Eyebrow}"/><TextBlock Text="SUN" Style="{StaticResource Eyebrow}"/>
+      </UniformGrid>
+      <ItemsControl Grid.Row="1" ItemsSource="{Binding}">
+       <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="7" Rows="6"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+       <ItemsControl.ItemTemplate><DataTemplate>
+        <ui:Button Click="Day_Click" Tag="{Binding Date}" Style="{StaticResource DayAction}" Padding="8,10" Margin="3" Opacity="{Binding Opacity}" ToolTip="{Binding CalendarTooltip}">
+         <StackPanel>
+          <TextBlock Text="{Binding DayNumber}" FontSize="14" FontWeight="Bold"/>
+          <TextBlock Text="{Binding CaloriesLabel}" FontSize="19" FontWeight="SemiBold" Margin="0,8,0,3" Foreground="{Binding StatusBrush}"/>
+          <Border Height="3" Background="{Binding StatusBrush}" CornerRadius="2" HorizontalAlignment="Left" Width="22" Margin="0,2,0,6"/>
+          <TextBlock Text="{Binding Status}" FontSize="10" Foreground="{Binding StatusBrush}" TextWrapping="Wrap"/>
+         </StackPanel>
+        </ui:Button>
+       </DataTemplate></ItemsControl.ItemTemplate>
+      </ItemsControl>
+     </Grid>
+    </ScrollViewer>
+   </DataTemplate>
+   <DataTemplate x:Key="LibraryTemplate">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+     <ItemsControl ItemsSource="{Binding}">
+      <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="{Binding LibraryColumns, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate><DataTemplate>
+       <ui:Button Tag="{Binding}" Click="LibraryFood_Click" Style="{StaticResource CardAction}" Height="228" ToolTip="Select food to log it">
+        <Grid>
+         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+         <TextBlock Text="{Binding GroupName, TargetNullValue=Uncategorized}" Style="{StaticResource Eyebrow}" TextTrimming="CharacterEllipsis"/>
+         <TextBlock Grid.Row="1" Text="{Binding RecipeName}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="66" VerticalAlignment="Top" Margin="0,14,0,12" ToolTip="{Binding RecipeName}"/>
+         <TextBlock Grid.Row="2" Text="{Binding BrandType, TargetNullValue=Generic}" Style="{StaticResource Caption}" FontSize="11" Margin="0,0,0,14" TextTrimming="CharacterEllipsis"/>
+         <Border Grid.Row="3" BorderBrush="#30465A" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+          <UniformGrid Columns="4">
+           <StackPanel><TextBlock Text="KCAL" Style="{StaticResource Caption}" FontSize="9"/><TextBlock Text="{Binding CaloriesPerServing, StringFormat={}{0:0.#}}" Foreground="{StaticResource Lime}" FontWeight="Bold" Margin="0,6,0,0"/></StackPanel>
+           <StackPanel><TextBlock Text="PROTEIN" Style="{StaticResource Caption}" FontSize="9"/><TextBlock Text="{Binding Protein, StringFormat={}{0:0.#}g}" Foreground="{StaticResource Teal}" FontWeight="SemiBold" Margin="0,6,0,0"/></StackPanel>
+           <StackPanel><TextBlock Text="CARBS" Style="{StaticResource Caption}" FontSize="9"/><TextBlock Text="{Binding Carbs, StringFormat={}{0:0.#}g}" Foreground="{StaticResource Amber}" FontWeight="SemiBold" Margin="0,6,0,0"/></StackPanel>
+           <StackPanel><TextBlock Text="FAT" Style="{StaticResource Caption}" FontSize="9"/><TextBlock Text="{Binding Fats, StringFormat={}{0:0.#}g}" Foreground="{StaticResource Violet}" FontWeight="SemiBold" Margin="0,6,0,0"/></StackPanel>
+          </UniformGrid>
+         </Border>
+        </Grid>
+       </ui:Button>
+      </DataTemplate></ItemsControl.ItemTemplate>
+     </ItemsControl>
+    </ScrollViewer>
+   </DataTemplate>
+  </ResourceDictionary>
+ </Window.Resources>
 
-        <!-- Existing page-based navigation is preserved -->
-        <Frame x:Name="PageFrame" Grid.ColumnSpan="2" Panel.ZIndex="20"
-               Visibility="Collapsed" NavigationUIVisibility="Hidden"
-               Background="#0D121B"/>
-    </Grid>
+ <Grid>
+  <Grid.ColumnDefinitions><ColumnDefinition Width="224"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+  <Border Background="#111C29" BorderBrush="#30465A" BorderThickness="0,0,1,0">
+   <DockPanel Margin="20,28,20,22">
+    <StackPanel DockPanel.Dock="Top" Margin="2,0,0,34">
+     <Border Background="#30492E" Width="46" Height="46" CornerRadius="14" HorizontalAlignment="Left">
+      <TextBlock Text="B" Foreground="{StaticResource Lime}" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+     </Border>
+     <TextBlock Text="BULK CARNAGE" FontSize="18" FontWeight="Bold" Margin="0,20,0,4"/>
+     <TextBlock Text="FOREVER / V10" Style="{StaticResource Eyebrow}"/>
+    </StackPanel>
+    <StackPanel DockPanel.Dock="Bottom">
+     <ui:Button Content="⚙  Daily targets" Click="Targets_Click" Style="{StaticResource Nav}"/>
+     <Border Background="#1A2939" CornerRadius="12" Padding="14" Margin="0,10,0,0">
+      <StackPanel><TextBlock Text="NO CLOUD. NO BS." Style="{StaticResource Eyebrow}"/>
+       <TextBlock Text="Your nutrition. Your machine." Style="{StaticResource Caption}" FontSize="10" Margin="0,7,0,0"/></StackPanel>
+     </Border>
+    </StackPanel>
+    <StackPanel>
+     <TextBlock Text="WORKSPACE" Style="{StaticResource Caption}" FontSize="10" Margin="0,0,0,12"/>
+     <ui:Button x:Name="OverviewNav" Content="◷   Daily nutrition" Click="Overview_Click" Style="{StaticResource Nav}"/>
+     <ui:Button x:Name="LibraryNav" Content="▦   Food library" Click="Library_Click" Style="{StaticResource Nav}"/>
+     <StackPanel x:Name="LibraryFilters" Visibility="Collapsed" Margin="0,24,0,0">
+      <TextBlock Text="FILTER YOUR FOODS" Style="{StaticResource Caption}" FontSize="10" Margin="0,0,0,16"/>
+      <TextBlock Text="Category" Style="{StaticResource Caption}" FontSize="11" Margin="0,0,0,7"/>
+      <ComboBox x:Name="CategoryInput" Style="{StaticResource DarkComboBox}" SelectionChanged="Category_Changed" Margin="0,0,0,18" AutomationProperties.Name="Food category"/>
+      <TextBlock Text="Brand" Style="{StaticResource Caption}" FontSize="11" Margin="0,0,0,7"/>
+      <ComboBox x:Name="BrandInput" Style="{StaticResource DarkComboBox}" SelectionChanged="Brand_Changed" AutomationProperties.Name="Food brand"/>
+     </StackPanel>
+     <Border BorderBrush="#30465A" BorderThickness="0,1,0,0" Margin="0,28,0,0" Padding="0,18,0,0">
+      <StackPanel><TextBlock Text="LOCAL DATABASE" Style="{StaticResource Caption}" FontSize="10"/>
+       <TextBlock Text="●  SQLite · Offline" FontSize="12" Foreground="{StaticResource Lime}" Margin="0,10,0,0"/></StackPanel>
+     </Border>
+    </StackPanel>
+   </DockPanel>
+  </Border>
+  <Grid Grid.Column="1" Margin="26,26,26,18">
+   <Grid.RowDefinitions>
+    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+    <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+   </Grid.RowDefinitions>
+   <Grid Margin="0,0,0,24">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <StackPanel>
+     <TextBlock x:Name="PageEyebrow" Text="DAILY NUTRITION" Style="{StaticResource Eyebrow}"/>
+     <TextBlock x:Name="PageHeading" Text="Fuel your day." FontSize="32" FontWeight="Bold" Margin="0,8,0,5"/>
+     <TextBlock x:Name="PageDescription" Text="Log what you eat. Watch your progress. Own your day." Style="{StaticResource Caption}"/>
+    </StackPanel>
+    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+     <TextBlock Text="TRACKING DATE" Style="{StaticResource Caption}" FontSize="10" Margin="0,0,0,7"/>
+     <DatePicker x:Name="DayPicker" Width="182" SelectedDateChanged="Date_Changed"/>
+    </StackPanel>
+   </Grid>
+   <Border x:Name="TargetsPanel" Grid.Row="1" Style="{StaticResource Surface}" Visibility="Collapsed" Margin="0,0,0,16">
+    <StackPanel>
+     <TextBlock Text="DAILY TARGETS" Style="{StaticResource Eyebrow}" Margin="0,0,0,12"/>
+     <WrapPanel>
+      <TextBlock Text="kcal" VerticalAlignment="Center" Margin="0,0,8,0"/>
+      <ui:TextBox x:Name="CalorieTargetInput" Style="{StaticResource Input}" Width="85" Margin="0,0,14,0" AutomationProperties.Name="Calorie target"/>
+      <TextBlock Text="Protein (g)" VerticalAlignment="Center" Margin="0,0,8,0"/>
+      <ui:TextBox x:Name="ProteinTargetInput" Style="{StaticResource Input}" Width="65" Margin="0,0,14,0" AutomationProperties.Name="Protein target"/>
+      <TextBlock Text="Carbs (g)" VerticalAlignment="Center" Margin="0,0,8,0"/>
+      <ui:TextBox x:Name="CarbTargetInput" Style="{StaticResource Input}" Width="65" Margin="0,0,14,0" AutomationProperties.Name="Carbohydrate target"/>
+      <TextBlock Text="Fat (g)" VerticalAlignment="Center" Margin="0,0,8,0"/>
+      <ui:TextBox x:Name="FatTargetInput" Style="{StaticResource Input}" Width="65" Margin="0,0,14,0" AutomationProperties.Name="Fat target"/>
+      <ui:Button Content="Save targets" Click="SaveTargets_Click" Style="{StaticResource Primary}"/>
+     </WrapPanel>
+    </StackPanel>
+   </Border>
+   <ItemsControl x:Name="SummaryCards" Grid.Row="2" Margin="-5,0,-5,20">
+    <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+    <ItemsControl.ItemTemplate><DataTemplate>
+     <Border Style="{StaticResource Surface}" Background="#1D2E41" Margin="5" Padding="18,15">
+      <StackPanel>
+       <TextBlock Text="{Binding Name}" Style="{StaticResource Caption}" FontSize="10"/>
+       <TextBlock Text="{Binding Value}" FontSize="27" FontWeight="Bold" Foreground="{Binding Accent}" Margin="0,8,0,4"/>
+       <TextBlock Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="11" Margin="0,0,0,11"/>
+       <ProgressBar Value="{Binding Percent}" Maximum="100" Foreground="{Binding Accent}" Background="#2D4357" Height="3"/>
+      </StackPanel>
+     </Border>
+    </DataTemplate></ItemsControl.ItemTemplate>
+   </ItemsControl>
+   <Grid Grid.Row="3" Margin="4,0,4,16">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <StackPanel><TextBlock x:Name="PeriodTitle" FontSize="20" FontWeight="SemiBold"/>
+     <TextBlock x:Name="PeriodSummary" Style="{StaticResource Caption}" FontSize="11" Margin="0,5,0,0"/></StackPanel>
+    <Border x:Name="ViewSelector" Grid.Column="1" Background="#142130" CornerRadius="11" Padding="3" VerticalAlignment="Center" Margin="12,0">
+     <StackPanel Orientation="Horizontal">
+      <RadioButton x:Name="DailyTab" Content="Daily cards" GroupName="View" IsChecked="True" Checked="View_Changed" Tag="Daily" Style="{StaticResource Segment}"/>
+      <RadioButton x:Name="WeekTab" Content="Week" GroupName="View" Checked="View_Changed" Tag="Week" Style="{StaticResource Segment}"/>
+      <RadioButton x:Name="MonthTab" Content="Month" GroupName="View" Checked="View_Changed" Tag="Month" Style="{StaticResource Segment}"/>
+     </StackPanel>
+    </Border>
+    <StackPanel x:Name="PeriodNavigation" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+     <ui:Button Content="‹" Click="Previous_Click" Style="{StaticResource Action}" ToolTip="Previous period" Margin="0,0,5,0"/>
+     <ui:Button Content="Today" Click="Today_Click" Style="{StaticResource Action}" Margin="0,0,5,0"/>
+     <ui:Button Content="›" Click="Next_Click" Style="{StaticResource Action}" ToolTip="Next period"/>
+    </StackPanel>
+   </Grid>
+   <Grid Grid.Row="4">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="20"/><ColumnDefinition Width="330"/></Grid.ColumnDefinitions>
+    <!-- One persistent frame; only the central content changes. -->
+    <ContentControl x:Name="MainContent" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" SizeChanged="Workspace_SizeChanged"/>
+    <Border Grid.Column="2" Style="{StaticResource Surface}" Padding="20">
+     <Grid>
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="65"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+      <StackPanel>
+       <DockPanel>
+        <Border Background="#2B4433" CornerRadius="7" Padding="7,4" DockPanel.Dock="Right"><TextBlock Text="QUICK LOG" Foreground="{StaticResource Lime}" FontSize="9" FontWeight="Bold"/></Border>
+        <TextBlock Text="ADD TO YOUR DAY" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
+       </DockPanel>
+       <TextBlock Text="Log a food." FontSize="25" FontWeight="Bold" Margin="0,10,0,4"/>
+       <TextBlock x:Name="LogDateLabel" Style="{StaticResource Caption}" Margin="0,0,0,12"/>
+       <ui:TextBox x:Name="FoodSearch" Style="{StaticResource Input}" PlaceholderText="Search food or brand…" TextChanged="Search_Changed" PreviewKeyDown="Search_KeyDown" AutomationProperties.Name="Search food"/>
+       <DockPanel Margin="0,12,0,7">
+        <CheckBox x:Name="FavoritesOnly" DockPanel.Dock="Right" Content="★ Only" FontSize="11" Checked="Favorites_Changed" Unchecked="Favorites_Changed"/>
+        <TextBlock x:Name="ResultsLabel" Text="Recent foods" Style="{StaticResource Caption}" FontSize="10" VerticalAlignment="Center"/>
+       </DockPanel>
+      </StackPanel>
+       <ListBox x:Name="SearchResults" Grid.Row="1" SelectionChanged="Result_Changed" PreviewKeyDown="Results_KeyDown"
+        Background="Transparent" BorderThickness="0" ItemContainerStyle="{StaticResource ResultItem}"
+        ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Food results">
+        <ListBox.ItemTemplate><DataTemplate>
+         <StackPanel>
+          <TextBlock Text="{Binding Food.RecipeName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Display}"/>
+          <TextBlock Text="{Binding Food.BrandType, TargetNullValue=Generic}" Style="{StaticResource Caption}" FontSize="10" Margin="0,4,0,0"/>
+          <TextBlock Text="{Binding Food.CaloriesPerServing, StringFormat={}{0:0.#} kcal / serving}" Foreground="{StaticResource Lime}" FontSize="10" Margin="0,3,0,0"/>
+         </StackPanel>
+        </DataTemplate></ListBox.ItemTemplate>
+       </ListBox>
+      <StackPanel Grid.Row="2">
+       <Border Background="#203448" CornerRadius="11" Padding="12" Margin="0,10,0,12">
+        <DockPanel>
+         <ui:Button x:Name="FavoriteButton" DockPanel.Dock="Right" Content="☆" Click="Favorite_Click" IsEnabled="False" Style="{StaticResource Action}" ToolTip="Favorite selected food" Padding="6,2" Margin="6,0,0,0" VerticalAlignment="Top"/>
+         <StackPanel>
+          <TextBlock x:Name="SelectedFoodLabel" Text="Choose a food above" Foreground="{StaticResource Lime}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+          <TextBlock x:Name="NutritionPreview" Text="One serving is ready by default." Style="{StaticResource Caption}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"/>
+         </StackPanel>
+        </DockPanel>
+       </Border>
+       <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <StackPanel><TextBlock Text="QUANTITY" Style="{StaticResource Caption}" FontSize="10" Margin="0,0,0,6"/>
+         <ui:TextBox x:Name="QuantityInput" Style="{StaticResource Input}" Text="1" TextChanged="Quantity_Changed" PreviewKeyDown="Quantity_KeyDown" AutomationProperties.Name="Quantity"/></StackPanel>
+        <StackPanel Grid.Column="2"><TextBlock Text="UNIT" Style="{StaticResource Caption}" FontSize="10" Margin="0,0,0,6"/>
+         <ComboBox x:Name="UnitInput" Style="{StaticResource DarkComboBox}" SelectionChanged="Unit_Changed" AutomationProperties.Name="Quantity unit"/></StackPanel>
+       </Grid>
+       <Grid Margin="0,12,0,0">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <StackPanel><TextBlock Text="ADD TO MEAL" Style="{StaticResource Caption}" FontSize="10" Margin="0,0,0,6"/>
+         <ComboBox x:Name="MealInput" Style="{StaticResource DarkComboBox}" SelectionChanged="Meal_Changed" AutomationProperties.Name="Meal"/></StackPanel>
+        <ui:Button x:Name="LogButton" Grid.Column="2" Content="＋ Log food ↵" Style="{StaticResource Primary}" Click="Log_Click" IsEnabled="False" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="38" Padding="6,8"/>
+       </Grid>
+       <TextBlock Text="Ctrl+L to search · Enter to select, then log" Style="{StaticResource Caption}" FontSize="10" TextAlignment="Center" Margin="0,10,0,0"/>
+      </StackPanel>
+     </Grid>
+    </Border>
+   </Grid>
+   <DockPanel Grid.Row="5" Margin="4,14,4,0">
+    <ui:Button x:Name="UndoButton" DockPanel.Dock="Right" Content="Undo last log" Click="Undo_Click" Visibility="Collapsed" Style="{StaticResource Action}" Padding="10,3"/>
+    <TextBlock x:Name="StatusText" Text="Loading your nutrition workspace…" Style="{StaticResource Caption}" FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center"/>
+   </DockPanel>
+  </Grid>
+ </Grid>
 </Window>
+

@@ -56,3 +56,4 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 /.vs
+/csharp/BulkCarnageForever/BulkCarnageForever.V10.Desktop/Properties/PublishProfiles/FolderProfile.pubxml
