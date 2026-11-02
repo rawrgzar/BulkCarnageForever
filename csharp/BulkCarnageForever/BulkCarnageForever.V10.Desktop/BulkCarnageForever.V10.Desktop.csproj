@@ -17,4 +17,7 @@
     <ProjectReference Include="..\BulkCarnageForever.V10.DAL\BulkCarnageForever.V10.DAL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="Assets\Artwork\*.png" />
+  </ItemGroup>
 </Project>

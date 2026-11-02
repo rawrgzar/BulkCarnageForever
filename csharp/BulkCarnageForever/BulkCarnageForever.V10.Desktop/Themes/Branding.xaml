@@ -1,0 +1,10 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+   <DrawingImage x:Key="BrandLogo"><DrawingImage.Drawing><DrawingGroup>
+    <GeometryDrawing Brush="{DynamicResource AccentSurface}" Geometry="M32,0 L58,15 58,49 32,64 6,49 6,15 Z"/>
+    <DrawingGroup><DrawingGroup.Transform><RotateTransform Angle="-30" CenterX="32" CenterY="32"/></DrawingGroup.Transform>
+    <GeometryDrawing Brush="{DynamicResource Lime}" Geometry="M14,21 L20,21 20,43 14,43 Z M22,16 L28,16 28,48 22,48 Z M28,29 L36,29 36,35 28,35 Z M36,16 L42,16 42,48 36,48 Z M44,21 L50,21 50,43 44,43 Z"/>
+    <GeometryDrawing Brush="#FFFFFF" Geometry="M23,17 L25,17 25,25 23,25 Z M37,17 L39,17 39,25 37,25 Z"/>
+    </DrawingGroup>
+   </DrawingGroup></DrawingImage.Drawing></DrawingImage>
+
+</ResourceDictionary>

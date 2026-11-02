@@ -1,0 +1,80 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+   <Style x:Key="Surface" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource PanelGradient}"/><Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="12"/><Setter Property="Padding" Value="20"/>
+   </Style>
+   <Style x:Key="Action" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+    <Setter Property="Background" Value="{DynamicResource ButtonGradient}"/><Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/><Setter Property="Padding" Value="12,8"/><Setter Property="Cursor" Value="Hand"/>
+   </Style>
+   <Style x:Key="Primary" TargetType="ui:Button" BasedOn="{StaticResource Action}">
+    <Setter Property="Background" Value="{DynamicResource PrimaryAccent}"/><Setter Property="BorderBrush" Value="{DynamicResource Lime}"/>
+    <Setter Property="Foreground" Value="{DynamicResource AccentText}"/><Setter Property="FontWeight" Value="Bold"/>
+   </Style>
+   <Style x:Key="Nav" TargetType="ui:Button" BasedOn="{StaticResource Action}">
+    <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="Padding" Value="14,13"/><Setter Property="Margin" Value="0,0,0,8"/>
+    <Setter Property="Background" Value="Transparent"/><Setter Property="BorderBrush" Value="Transparent"/>
+   </Style>
+   <Style x:Key="Input" TargetType="ui:TextBox" BasedOn="{StaticResource {x:Type ui:TextBox}}">
+    <Setter Property="Background" Value="{DynamicResource InputBackground}"/><Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/><Setter Property="MinHeight" Value="38"/>
+   </Style>
+   <!-- Use the library's actual template, not the operating system's light template. -->
+   <Style x:Key="DarkComboBox" TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
+    <Setter Property="Background" Value="{DynamicResource InputBackground}"/><Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/><Setter Property="MinHeight" Value="38"/>
+    <Setter Property="ItemContainerStyle" Value="{StaticResource DefaultComboBoxItemStyle}"/>
+    <Setter Property="MaxDropDownHeight" Value="320"/>
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+   </Style>
+   <Style x:Key="Segment" TargetType="RadioButton">
+    <Setter Property="Foreground" Value="{DynamicResource Muted}"/><Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+     <Border x:Name="SegmentBorder" Background="Transparent" CornerRadius="8" Padding="16,9" Margin="2">
+      <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+     </Border>
+     <ControlTemplate.Triggers>
+      <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="SegmentBorder" Property="Background" Value="{DynamicResource HoverBackground}"/></Trigger>
+      <Trigger Property="IsChecked" Value="True">
+       <Setter TargetName="SegmentBorder" Property="Background" Value="{DynamicResource AccentSurface}"/>
+       <Setter Property="Foreground" Value="{DynamicResource Lime}"/><Setter Property="FontWeight" Value="SemiBold"/>
+      </Trigger>
+      <Trigger Property="IsKeyboardFocused" Value="True">
+       <Setter TargetName="SegmentBorder" Property="BorderBrush" Value="{DynamicResource Lime}"/>
+       <Setter TargetName="SegmentBorder" Property="BorderThickness" Value="1"/>
+      </Trigger>
+     </ControlTemplate.Triggers>
+    </ControlTemplate></Setter.Value></Setter>
+   </Style>
+   <Style x:Key="CardAction" TargetType="ui:Button" BasedOn="{StaticResource Action}">
+    <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="VerticalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="VerticalContentAlignment" Value="Stretch"/>
+    <Setter Property="Border.CornerRadius" Value="14"/>
+    <Setter Property="Background" Value="{DynamicResource SurfaceBackground}"/><Setter Property="Padding" Value="8"/><Setter Property="Margin" Value="5"/>
+   </Style>
+   <Style x:Key="ResultItem" TargetType="ListBoxItem">
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
+     <Border x:Name="ResultBorder" Padding="12,10" Margin="0,0,0,4" CornerRadius="9" Background="Transparent" BorderThickness="1" BorderBrush="Transparent"><ContentPresenter/></Border>
+     <ControlTemplate.Triggers>
+      <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ResultBorder" Property="Background" Value="{DynamicResource HoverBackground}"/></Trigger>
+      <Trigger Property="IsSelected" Value="True">
+       <Setter TargetName="ResultBorder" Property="Background" Value="{DynamicResource AccentSurface}"/>
+       <Setter TargetName="ResultBorder" Property="BorderBrush" Value="{DynamicResource AccentBorder}"/>
+      </Trigger>
+     </ControlTemplate.Triggers>
+    </ControlTemplate></Setter.Value></Setter>
+   </Style>
+   <Style x:Key="DayAction" TargetType="ui:Button" BasedOn="{StaticResource CardAction}">
+    <Style.Triggers>
+     <DataTrigger Binding="{Binding IsSelected}" Value="True">
+      <Setter Property="BorderBrush" Value="{DynamicResource Lime}"/>
+      <Setter Property="Background" Value="{DynamicResource AccentSurface}"/>
+     </DataTrigger>
+    </Style.Triggers>
+   </Style>
+ <Style x:Key="HeaderPanel" TargetType="Border"><Setter Property="CornerRadius" Value="14"/><Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/><Setter Property="Padding" Value="18"/></Style>
+
+</ResourceDictionary>

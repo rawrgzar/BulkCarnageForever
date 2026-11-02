@@ -7,6 +7,7 @@ namespace BulkCarnageForever.V10.Core.Model
     public class MealEntry
     {
         public long Id { get; set; }
+        public long UserProfileId { get; set; }
 
         public DateOnly Date { get; set; }
             = DateOnly.FromDateTime(DateTime.Today);

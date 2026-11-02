@@ -20,7 +20,7 @@ public partial class MainWindow : Window
     public static readonly DependencyProperty LibraryColumnsProperty = DependencyProperty.Register(
         nameof(LibraryColumns), typeof(int), typeof(MainWindow), new PropertyMetadata(3));
     public static readonly DependencyProperty WorkspaceHeightProperty = DependencyProperty.Register(
-        nameof(WorkspaceHeight), typeof(double), typeof(MainWindow), new PropertyMetadata(780d));
+        nameof(WorkspaceHeight), typeof(double), typeof(MainWindow), new PropertyMetadata(640d));
     public int LibraryColumns
     {
         get => (int)GetValue(LibraryColumnsProperty);
@@ -35,13 +35,12 @@ public partial class MainWindow : Window
     {
         // Keep cards usable at laptop widths and use more columns on wide monitors.
         LibraryColumns = Math.Clamp((int)(e.NewSize.Width / 290), 2, 6);
-        WorkspaceHeight = Math.Max(780, e.NewSize.Height - 2);
+        WorkspaceHeight = Math.Max(640, e.NewSize.Height - 2);
     }
     private readonly Func<AppDbContext> _database;
     private readonly string _preferencesPath;
     private readonly bool _initializeDatabase;
     private JournalPreferences _preferences = new();
-    private List<FoodItem> _foods = new();
     private Dictionary<string, FoodItem> _catalog = new(StringComparer.Ordinal);
     private List<MealEntry> _entries = new();
     private FoodItem? _selected;
@@ -61,6 +60,7 @@ public partial class MainWindow : Window
         _initializeDatabase = initializeDatabase;
         InitializeComponent();
         PreviewKeyDown += Window_KeyDown;
+        Closed += (_, _) => { _ready = false; _searchTimer?.Stop(); _foodRequest++; _libraryRequest++; };
     }
 
     private async void Window_Loaded(object sender, RoutedEventArgs e) => await InitializeJournalAsync();
@@ -69,46 +69,35 @@ public partial class MainWindow : Window
     {
         if (_started) return;
         _started = true;
+        LoadingText.Text = "Preparing your battle station…";
         try
         {
-            string? preferencesWarning = null;
-            try
-            {
-                if (File.Exists(_preferencesPath))
-                    _preferences = JsonSerializer.Deserialize<JournalPreferences>(await File.ReadAllTextAsync(_preferencesPath)) ?? new();
-                _preferences.Normalize();
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
-            {
-                _preferences = new();
-                preferencesWarning = "Preferences could not be read; defaults are in use.";
-            }
+            await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Background);
+            await Task.Run(async () => { await using var db = _database(); if (_initializeDatabase) await db.InitializeAsync(); });
             await using var db = _database();
-            if (_initializeDatabase) await db.InitializeAsync();
-            _foods = await db.FoodItems.AsNoTracking().OrderBy(x => x.RecipeName).ToListAsync();
-            _catalog = _foods.ToDictionary(x => x.RecipeName, StringComparer.Ordinal);
-            _entries = await db.MealEntries.AsNoTracking().OrderBy(x => x.Id).ToListAsync();
+            _foodCount = await db.FoodItems.CountAsync();
             _updating = true;
             DayPicker.SelectedDate = _day;
             MealInput.ItemsSource = Enum.GetValues<MealType>();
-            MealInput.SelectedItem = _preferences.LastMeal;
-            UnitInput.ItemsSource = new[] { "servings" };
-            UnitInput.SelectedIndex = 0;
-            CategoryInput.ItemsSource = new[] { "All categories" }.Concat(_foods.Select(x => x.GroupName ?? "Uncategorized").Distinct().OrderBy(x => x)).ToList();
+            UnitInput.ItemsSource = new[] { "servings" }; UnitInput.SelectedIndex = 0;
+            CategoryInput.ItemsSource = new[] { "All categories" }.Concat(await db.FoodItems.Select(x => x.GroupName ?? "Uncategorized").Distinct().OrderBy(x => x).ToListAsync()).ToList();
             CategoryInput.SelectedIndex = 0;
-            BrandInput.ItemsSource = new[] { "All brands" }.Concat(_foods.Select(x => x.BrandType ?? "Generic").Distinct().OrderBy(x => x)).ToList();
-            BrandInput.SelectedIndex = 0;
-            FillTargetInputs();
+            await LoadBrandsAsync();
+            _profiles = await db.UserProfiles.AsNoTracking().OrderBy(x => x.Id).ToListAsync();
             _updating = false;
-            _ready = true;
-            Render();
-            RefreshSearch();
-            StatusText.Text = preferencesWarning ?? $"{_foods.Count:N0} foods ready · Select a day and start typing. Your data stays on this machine.";
+            LoadingOverlay.Visibility = Visibility.Collapsed;
+            if (_profiles.Count == 0) { ShowProfileSetup(); return; }
+            long last = ReadLastProfile();
+            await SwitchProfileAsync(_profiles.FirstOrDefault(x => x.Id == last)?.Id ?? _profiles[0].Id);
+            StatusText.Text = $"{_foodCount:N0} foods ready · Your data stays on this machine.";
         }
         catch (Exception ex)
         {
-            _updating = false;
-            StatusText.Text = $"Could not load the journal: {ex.Message}";
+            _updating = false; _started = false;
+            LoadingText.Text = $"Could not open your battle station: {ex.Message}";
+            LoadingProgress.Visibility = Visibility.Collapsed;
+            RetryLoadingButton.Visibility = Visibility.Visible;
+            LoadingOverlay.Visibility = Visibility.Visible;
         }
     }
 
@@ -122,14 +111,15 @@ public partial class MainWindow : Window
 
     internal void Render()
     {
-        if (!_ready) return;
-        var active = new SolidColorBrush(Color.FromRgb(39, 64, 48));
+        if (!_ready || _profile is null) return;
+        ApplyGoalForDate();
+        var active = (Brush)Resources["AccentSurface"];
         OverviewNav.Background = _library ? Brushes.Transparent : active;
         OverviewNav.Foreground = _library ? Brushes.WhiteSmoke : (Brush)Resources["Lime"];
-        OverviewNav.BorderBrush = _library ? Brushes.Transparent : new SolidColorBrush(Color.FromRgb(71, 101, 66));
+        OverviewNav.BorderBrush = _library ? Brushes.Transparent : (Brush)Resources["AccentBorder"];
         LibraryNav.Background = _library ? active : Brushes.Transparent;
         LibraryNav.Foreground = _library ? (Brush)Resources["Lime"] : Brushes.WhiteSmoke;
-        LibraryNav.BorderBrush = _library ? new SolidColorBrush(Color.FromRgb(71, 101, 66)) : Brushes.Transparent;
+        LibraryNav.BorderBrush = _library ? (Brush)Resources["AccentBorder"] : Brushes.Transparent;
         LibraryFilters.Visibility = _library ? Visibility.Visible : Visibility.Collapsed;
         ViewSelector.Visibility = PeriodNavigation.Visibility = _library ? Visibility.Collapsed : Visibility.Visible;
         PageEyebrow.Text = _library ? "FOOD EXPLORER" : "DAILY NUTRITION";
@@ -148,10 +138,9 @@ public partial class MainWindow : Window
         if (_library)
         {
             MainContent.ContentTemplate = (DataTemplate)Resources["LibraryTemplate"];
-            var matches = MatchingFoods(FoodSearch.Text.Trim()).ToList();
-            MainContent.Content = matches;
-            PeriodTitle.Text = "Food library";
-            PeriodSummary.Text = $"{matches.Count:N0} of {_foods.Count:N0} foods · Select a card to log it.";
+            MainContent.Content = _libraryView;
+            PeriodTitle.Text = "Food database";
+            PeriodSummary.Text = _libraryView.Summary;
         }
         else
         {
@@ -194,6 +183,7 @@ public partial class MainWindow : Window
                 ? $"{selected.Count} foods logged · {totals.Status} · {_day:ddd, dd MMM}"
                 : $"{recorded} recorded days · {inPeriod.Count(x => x.IsOver)} over target · Select a day to log food";
         }
+        RefreshSection();
     }
 
     private JournalSummaryCard MakeSummary(string name, double value, double target, string unit, string accent, int unknown)
@@ -219,8 +209,10 @@ public partial class MainWindow : Window
             carbs += servings * food.Carbs;
             fat += servings * food.Fats;
         }
-        bool over = calories > _preferences.Calories;
-        string status = rows.Count == 0 ? "No entries" : over ? $"{calories - _preferences.Calories:N0} kcal over" : $"{_preferences.Calories - calories:N0} kcal left";
+        var dayGoal = GoalFor(date);
+        double calorieTarget = dayGoal?.Calories ?? _preferences.Calories;
+        bool over = calories > calorieTarget;
+        string status = rows.Count == 0 ? "No entries" : over ? $"{calories - calorieTarget:N0} kcal over" : $"{calorieTarget - calories:N0} kcal left";
         if (unknown > 0) status = over ? status + " · incomplete" : "Nutrition incomplete";
         return new JournalDayCard
         {
@@ -229,13 +221,12 @@ public partial class MainWindow : Window
             Heading = date == DateTime.Today ? "TODAY" : date.ToString("dddd").ToUpperInvariant(),
             DateLabel = date.ToString("dd MMM"), ShortDate = date.ToString("dd MMM"),
             CaloriesLabel = rows.Count == 0 ? "—" : $"{calories:N0}",
-            TargetLabel = rows.Count == 0 ? "No food logged" : $"of {_preferences.Calories:N0} kcal" + (unknown > 0 ? " · known total" : ""),
-            Percent = Math.Clamp(calories / _preferences.Calories * 100, 0, 100), Status = status,
-            StatusBrush = new SolidColorBrush(over ? Color.FromRgb(232, 183, 125) :
-                rows.Count == 0 || unknown > 0 ? Color.FromRgb(156, 178, 201) : Color.FromRgb(189, 244, 115)),
-            ProteinLabel = MacroLabel("Protein", protein, _preferences.Protein, rows.Count),
-            CarbsLabel = MacroLabel("Carbs", carbs, _preferences.Carbs, rows.Count),
-            FatLabel = MacroLabel("Fat", fat, _preferences.Fat, rows.Count),
+            TargetLabel = rows.Count == 0 ? "No food logged" : $"of {calorieTarget:N0} kcal" + (unknown > 0 ? " · known total" : ""),
+            Percent = Math.Clamp(calories / calorieTarget * 100, 0, 100), Status = status,
+            StatusBrush = (Brush)Resources[over ? "Amber" : rows.Count == 0 || unknown > 0 ? "Muted" : "Lime"],
+            ProteinLabel = MacroLabel("Protein", protein, dayGoal?.Protein ?? _preferences.Protein, rows.Count),
+            CarbsLabel = MacroLabel("Carbs", carbs, dayGoal?.Carbs ?? _preferences.Carbs, rows.Count),
+            FatLabel = MacroLabel("Fat", fat, dayGoal?.Fats ?? _preferences.Fat, rows.Count),
             CompactMacros = rows.Count == 0 ? "" : $"P {protein:0} / C {carbs:0} / F {fat:0}g",
             SelectionLabel = date == _day ? "● Selected" : "", Opacity = inMonth ? 1 : 0.45
         };
@@ -254,57 +245,7 @@ public partial class MainWindow : Window
         return $"{entry.MealType} · {entry.AmountEaten:0.##} {food.MeasurementType ?? "units"} · {entry.AmountEaten / food.MeasurementServings * food.CaloriesPerServing:0.#} kcal";
     }
 
-    private IEnumerable<FoodItem> MatchingFoods(string term) => _foods.Where(x =>
-        (!_library || CategoryInput.SelectedItem is not string category || category == "All categories" || (x.GroupName ?? "Uncategorized") == category) &&
-        (!_library || BrandInput.SelectedItem is not string brand || brand == "All brands" || (x.BrandType ?? "Generic") == brand) &&
-        (term.Length == 0 || x.RecipeName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-        (x.BrandType?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
-        (x.GroupName?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)));
-
-    private void Category_Changed(object sender, SelectionChangedEventArgs e)
-    {
-        if (!_ready || _updating) return;
-        _updating = true;
-        var category = CategoryInput.SelectedItem as string;
-        BrandInput.ItemsSource = new[] { "All brands" }.Concat(_foods
-            .Where(x => category == "All categories" || (x.GroupName ?? "Uncategorized") == category)
-            .Select(x => x.BrandType ?? "Generic").Distinct().OrderBy(x => x)).ToList();
-        BrandInput.SelectedIndex = 0;
-        _updating = false;
-        RefreshSearch(); Render();
-    }
-    private void Brand_Changed(object sender, SelectionChangedEventArgs e)
-    { if (_ready && !_updating) { RefreshSearch(); Render(); } }
-
-    private void RefreshSearch()
-    {
-        if (!_ready || _updating) return;
-        string term = FoodSearch.Text.Trim();
-        var recent = _entries.OrderByDescending(x => x.Id).Select(x => x.FoodName).Distinct().ToList();
-        var rank = recent.Select((name, i) => (name, i)).ToDictionary(x => x.name, x => x.i);
-        var query = MatchingFoods(term);
-        if (FavoritesOnly.IsChecked == true) query = query.Where(x => _preferences.Favorites.Contains(x.RecipeName));
-        var results = query.OrderByDescending(x => _preferences.Favorites.Contains(x.RecipeName))
-            .ThenBy(x => rank.GetValueOrDefault(x.RecipeName, int.MaxValue))
-            .ThenBy(x => x.RecipeName).Take(40)
-            .Select(x => new JournalFoodResult(x, (_preferences.Favorites.Contains(x.RecipeName) ? "★ " : "") +
-                $"{x.RecipeName} · {x.BrandType ?? "unbranded"} · {x.CaloriesPerServing:0.#} kcal · P {x.Protein:0.#} / C {x.Carbs:0.#} / F {x.Fats:0.#}g")).ToList();
-        _updating = true;
-        SearchResults.ItemsSource = results;
-        SearchResults.SelectedIndex = -1;
-        _updating = false;
-        ResultsLabel.Text = results.Count == 0 ? "No matching foods" : term.Length == 0 ? "Favorites & recents" : $"{results.Count} matches · max 40";
-    }
-
-    private void Search_Changed(object sender, TextChangedEventArgs e)
-    {
-        if (!_ready || _updating) return;
-        _selected = null;
-        RefreshSearch();
-        UpdatePreview();
-        if (_library) Render();
-    }
-    private void Favorites_Changed(object sender, RoutedEventArgs e) => RefreshSearch();
+    private async void Favorites_Changed(object sender, RoutedEventArgs e) { if (!_updating) { _libraryPage = 0; RefreshSearch(); await RefreshLibraryAsync(); } }
     private void Result_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_ready && !_updating && SearchResults.SelectedItem is JournalFoodResult result) SelectFood(result.Food);
@@ -361,7 +302,7 @@ public partial class MainWindow : Window
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.L && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-        { FoodSearch.Focus(); FoodSearch.SelectAll(); e.Handled = true; }
+        { Navigate("Food Log"); FoodSearch.Focus(); FoodSearch.SelectAll(); e.Handled = true; }
     }
     private void Quantity_Changed(object sender, TextChangedEventArgs e) { if (_ready && !_updating) UpdatePreview(); }
     private void Unit_Changed(object sender, SelectionChangedEventArgs e) { if (_ready && !_updating) UpdatePreview(); }
@@ -393,10 +334,10 @@ public partial class MainWindow : Window
     private async void Log_Click(object sender, RoutedEventArgs e) => await LogAsync();
     internal async Task LogAsync()
     {
-        if (!_ready || _busy || _selected is null || !TryAmount(out double amount) || MealInput.SelectedItem is not MealType meal) return;
+        if (!_ready || _busy || _switching || _profile is null || _selected is null || !TryAmount(out double amount) || MealInput.SelectedItem is not MealType meal) return;
         _busy = true;
         UpdatePreview();
-        var entry = new MealEntry { Date = DateOnly.FromDateTime(_day), MealType = meal, FoodName = _selected.RecipeName, AmountEaten = amount };
+        var entry = new MealEntry { UserProfileId = _profile!.Id, Date = DateOnly.FromDateTime(_day), MealType = meal, FoodName = _selected.RecipeName, AmountEaten = amount };
         try
         {
             await using var db = _database();
@@ -424,13 +365,13 @@ public partial class MainWindow : Window
     { if (sender is FrameworkElement { Tag: long id }) await RemoveAsync(id, false); }
     internal async Task RemoveAsync(long id, bool undo)
     {
-        if (_busy || !_ready) return;
+        if (_busy || !_ready || _switching || _profile is null) return;
         _busy = true;
         UpdatePreview();
         try
         {
             await using var db = _database();
-            var entry = await db.MealEntries.FindAsync(id);
+            var entry = await db.MealEntries.FirstOrDefaultAsync(x => x.Id == id && x.UserProfileId == _profile!.Id);
             if (entry is not null) { db.MealEntries.Remove(entry); await db.SaveChangesAsync(); }
             _entries.RemoveAll(x => x.Id == id);
             if (_lastAdded == id) { _lastAdded = null; UndoButton.Visibility = Visibility.Collapsed; }
@@ -454,53 +395,41 @@ public partial class MainWindow : Window
         _preferences.LastMeal = meal;
         SavePreferences();
     }
-    private void Targets_Click(object sender, RoutedEventArgs e) => TargetsPanel.Visibility =
-        TargetsPanel.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+    private void Targets_Click(object sender, RoutedEventArgs e) => Navigate("Goals");
     private void SaveTargets_Click(object sender, RoutedEventArgs e)
     {
-        if (!_ready) return;
+        if (!_ready || _profile is null) return;
         static bool Parse(string text, out double value) => double.TryParse(text, NumberStyles.Float, CultureInfo.CurrentCulture, out value) && double.IsFinite(value) && value > 0;
         if (!Parse(CalorieTargetInput.Text, out double calories) || !Parse(ProteinTargetInput.Text, out double protein) ||
             !Parse(CarbTargetInput.Text, out double carbs) || !Parse(FatTargetInput.Text, out double fat))
         { StatusText.Text = "Each target must be a finite number greater than zero."; return; }
         var old = (_preferences.Calories, _preferences.Protein, _preferences.Carbs, _preferences.Fat);
+        var oldGoal = (_preferences.Goal, _preferences.Adjustment);
         (_preferences.Calories, _preferences.Protein, _preferences.Carbs, _preferences.Fat) = (calories, protein, carbs, fat);
-        if (!SavePreferences())
-        { (_preferences.Calories, _preferences.Protein, _preferences.Carbs, _preferences.Fat) = old; return; }
-        TargetsPanel.Visibility = Visibility.Collapsed;
+        if (calories != old.Calories) { _preferences.Goal = "Custom"; _preferences.Adjustment = calories - _preferences.Tdee; }
+        if (!SavePreferences(true))
+        { (_preferences.Goal, _preferences.Adjustment) = oldGoal; (_preferences.Calories, _preferences.Protein, _preferences.Carbs, _preferences.Fat) = old; return; }
         Render();
-        StatusText.Text = "Daily targets saved and applied across your journal.";
+        StatusText.Text = "Targets saved for the selected date and following days.";
     }
-    private bool SavePreferences()
-    {
-        try
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(_preferencesPath)!);
-            File.WriteAllText(_preferencesPath + ".tmp", JsonSerializer.Serialize(_preferences, new JsonSerializerOptions { WriteIndented = true }));
-            File.Move(_preferencesPath + ".tmp", _preferencesPath, true);
-            return true;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        { StatusText.Text = $"Preferences could not be saved: {ex.Message}"; return false; }
-    }
-    private void Overview_Click(object sender, RoutedEventArgs e) { _library = false; Render(); RefreshSearch(); }
-    private void Library_Click(object sender, RoutedEventArgs e) { _library = true; Render(); RefreshSearch(); }
+    private void Overview_Click(object sender, RoutedEventArgs e) => Navigate("Food Log");
+    private void Library_Click(object sender, RoutedEventArgs e) => Navigate("Food Database");
     private void View_Changed(object sender, RoutedEventArgs e)
     {
         if (!_ready || sender is not RadioButton { Tag: string mode }) return;
-        _mode = mode; _library = false; Render(); RefreshSearch();
+        _mode = mode; _page = "Food Log"; _library = false; Render(); RefreshSearch();
     }
     private void Day_Click(object sender, RoutedEventArgs e)
     { if (sender is FrameworkElement { Tag: DateTime date }) SetDay(date); }
     private void Date_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (!_ready || _updating) return;
-        if (DayPicker.SelectedDate is DateTime date) { _day = date.Date; Render(); }
+        if (DayPicker.SelectedDate is DateTime date) { _day = date.Date; _estimateInput = null; ApplyGoalForDate(); FillTargetInputs(); Render(); }
         else { _updating = true; DayPicker.SelectedDate = _day; _updating = false; }
     }
     private void SetDay(DateTime date)
     {
-        _day = date.Date;
+        _day = date.Date; _estimateInput = null; ApplyGoalForDate(); FillTargetInputs();
         _updating = true; DayPicker.SelectedDate = _day; _updating = false;
         Render();
     }
@@ -522,8 +451,21 @@ public sealed class JournalPreferences
     public double Fat { get; set; } = 75;
     public MealType LastMeal { get; set; } = MealType.Breakfast;
     public List<string> Favorites { get; set; } = new();
+    public string Theme { get; set; } = "CarnagePro";
+    public bool MatureArtworkEnabled { get; set; }
+    public string BackgroundPreset { get; set; } = "Theme";
+    public double Tdee { get; set; } = 2900;
+    public double Adjustment { get; set; } = -400;
+    public string Goal { get; set; } = "Custom";
+    public List<JournalWeightEntry> Weights { get; set; } = new();
     public void Normalize()
     {
+        Theme = Presentation.ThemeManager.Normalize(Theme, MatureArtworkEnabled);
+        if (BackgroundPreset is not ("Theme" or "Food" or "City" or "None")) BackgroundPreset = "Theme";
+        if (!double.IsFinite(Tdee) || Tdee <= 0) Tdee = 2900;
+        if (!double.IsFinite(Adjustment) || Tdee + Adjustment <= 0) Adjustment = 0;
+        if (Goal is not ("Bulk" or "Cut" or "Maintain" or "Custom")) Goal = "Custom";
+        Weights = (Weights ?? new()).Where(x => x is not null && double.IsFinite(x.Kg) && x.Kg > 0).GroupBy(x => x.Date).Select(x => x.Last()).OrderBy(x => x.Date).ToList();
         if (!double.IsFinite(Calories) || Calories <= 0) Calories = 2500;
         if (!double.IsFinite(Protein) || Protein <= 0) Protein = 180;
         if (!double.IsFinite(Carbs) || Carbs <= 0) Carbs = 280;
