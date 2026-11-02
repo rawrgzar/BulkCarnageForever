@@ -69,10 +69,11 @@ public partial class MainWindow
         consent.Unchecked += (_, _) => SetMatureArtworkEnabled(false);
         panel.Children.Add(consent);
         panel.Children.Add(Label("Enabling the option does not select After Dark. You choose that theme separately, and can disable the artwork at any time.", 12, "Muted"));
+        panel.Children.Add(Label("The selected artwork fills the app window. Shaded panels keep forms and charts readable.", 12, "Muted"));
         string[] names = { "Theme artwork", "Food studio", "City lights", "No imagery" };
         string[] ids = { "Theme", "Food", "City", "None" };
         int index = Array.IndexOf(ids, _preferences.BackgroundPreset);
-        var background = Choice(panel, "Header background", names, names[Math.Max(0, index)]);
+        var background = Choice(panel, "App background", names, names[Math.Max(0, index)]);
         background.SelectionChanged += (_, _) => { if (background.SelectedIndex >= 0) SetBackgroundPreset(ids[background.SelectedIndex]); };
     }
 }

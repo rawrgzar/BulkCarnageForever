@@ -166,6 +166,8 @@
  </Window.Resources>
 
  <Grid>
+ <Image x:Name="AppWallpaper" Source="{DynamicResource PageHeroImage}" Stretch="UniformToFill" IsHitTestVisible="False"/>
+ <Border Background="{DynamicResource WallpaperScrim}" IsHitTestVisible="False"/>
  <Grid x:Name="ApplicationShell" IsEnabled="False">
   <Grid.ColumnDefinitions><ColumnDefinition Width="224"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
   <Border Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0">
@@ -211,7 +213,7 @@
     <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
     <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
    </Grid.RowDefinitions>
-   <Border Style="{StaticResource HeaderPanel}" Background="{DynamicResource HeaderArtworkBrush}" Height="188" Margin="0,0,0,18" Padding="0" ClipToBounds="True"><Grid>
+   <Border Style="{StaticResource HeaderPanel}" Background="{DynamicResource HeaderBackdrop}" Height="188" Margin="0,0,0,18" Padding="0" ClipToBounds="True"><Grid>
     <Border Background="{DynamicResource HeroScrim}" CornerRadius="14"/>
     <Grid Margin="20">
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -283,10 +285,10 @@
     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="20"/><ColumnDefinition Width="330"/></Grid.ColumnDefinitions>
     <!-- One persistent frame; only the central content changes. -->
     <ContentControl x:Name="MainContent" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" SizeChanged="Workspace_SizeChanged"/>
-    <Border Grid.Column="2" Style="{StaticResource Surface}" Padding="20">
-     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><Grid>
-      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="65"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-      <StackPanel>
+    <Border x:Name="QuickLogPanel" Grid.Column="2" Style="{StaticResource Surface}" Padding="20">
+     <ScrollViewer x:Name="QuickLogScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False" VerticalContentAlignment="Top"><Grid x:Name="QuickLogLayout" MinHeight="480" Height="{Binding ViewportHeight, ElementName=QuickLogScroller}" VerticalAlignment="Top">
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="80"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+      <StackPanel x:Name="QuickLogHeader" SizeChanged="QuickLogSection_SizeChanged">
        <DockPanel>
         <Border Background="{DynamicResource AccentSurface}" CornerRadius="7" Padding="7,4" DockPanel.Dock="Right"><TextBlock Text="QUICK LOG" Foreground="{DynamicResource Lime}" FontSize="9" FontWeight="Bold"/></Border>
         <TextBlock Text="ADD TO YOUR DAY" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
@@ -299,9 +301,11 @@
         <TextBlock x:Name="ResultsLabel" Text="Recent foods" Style="{StaticResource Caption}" FontSize="10" VerticalAlignment="Center"/>
        </DockPanel>
       </StackPanel>
-       <ListBox x:Name="SearchResults" Grid.Row="1" MaxHeight="180" SelectionChanged="Result_Changed" PreviewKeyDown="Results_KeyDown"
+       <ListBox x:Name="SearchResults" Grid.Row="1" VerticalAlignment="Stretch" VerticalContentAlignment="Top"
+        ScrollViewer.CanContentScroll="True" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" SelectionChanged="Result_Changed" PreviewKeyDown="Results_KeyDown"
         Background="Transparent" BorderThickness="0" ItemContainerStyle="{StaticResource ResultItem}"
         ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Food results">
+        <ListBox.ItemsPanel><ItemsPanelTemplate><VirtualizingStackPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
         <ListBox.ItemTemplate><DataTemplate>
          <StackPanel>
           <TextBlock Text="{Binding Food.RecipeName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Display}"/>
@@ -310,7 +314,7 @@
          </StackPanel>
         </DataTemplate></ListBox.ItemTemplate>
        </ListBox>
-      <StackPanel Grid.Row="2">
+      <StackPanel x:Name="QuickLogFooter" Grid.Row="2" SizeChanged="QuickLogSection_SizeChanged">
        <Border Background="{DynamicResource ControlBackground}" CornerRadius="11" Padding="12" Margin="0,10,0,12">
         <DockPanel>
          <ui:Button x:Name="FavoriteButton" DockPanel.Dock="Right" Content="☆" Click="Favorite_Click" IsEnabled="False" Style="{StaticResource Action}" ToolTip="Favorite selected food" Padding="6,2" Margin="6,0,0,0" VerticalAlignment="Top"/>

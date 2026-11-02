@@ -2,7 +2,7 @@
  <SolidColorBrush x:Key="Lime" Color="{DynamicResource Theme.accent}"/>
  <SolidColorBrush x:Key="AccentBrush" Color="{DynamicResource Theme.accent}"/>
  <SolidColorBrush x:Key="AppBackground" Color="{DynamicResource Theme.bg}"/>
- <SolidColorBrush x:Key="SidebarBackground" Color="{DynamicResource Theme.side}"/>
+ <SolidColorBrush Opacity="0.95" x:Key="SidebarBackground" Color="{DynamicResource Theme.side}"/>
  <SolidColorBrush x:Key="SurfaceBackground" Color="{DynamicResource Theme.surface}"/>
  <SolidColorBrush x:Key="SurfaceRaised" Color="{DynamicResource Theme.raised}"/>
  <SolidColorBrush x:Key="LineBrush" Color="{DynamicResource Theme.line}"/>
@@ -35,8 +35,10 @@
  <SolidColorBrush x:Key="Violet" Color="#F6CF63"/>
  <SolidColorBrush x:Key="FiberBrush" Color="#83DEAF"/>
  <SolidColorBrush x:Key="SuccessBrush" Color="#83DEAF"/>
- <LinearGradientBrush x:Key="PanelGradient" StartPoint="0,0" EndPoint="0,1"><GradientStop Color="{DynamicResource Theme.raised}" Offset="0"/><GradientStop Color="{DynamicResource Theme.surface}" Offset="1"/></LinearGradientBrush>
+ <LinearGradientBrush Opacity="0.88" x:Key="PanelGradient" StartPoint="0,0" EndPoint="0,1"><GradientStop Color="{DynamicResource Theme.raised}" Offset="0"/><GradientStop Color="{DynamicResource Theme.surface}" Offset="1"/></LinearGradientBrush>
  <LinearGradientBrush x:Key="ButtonGradient" StartPoint="0,0" EndPoint="0,1"><GradientStop Color="{DynamicResource Theme.control}" Offset="0"/><GradientStop Color="{DynamicResource Theme.surface}" Offset="1"/></LinearGradientBrush>
  <LinearGradientBrush x:Key="HeroScrim" StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#F00C1017" Offset="0"/><GradientStop Color="#D90C1017" Offset="0.42"/><GradientStop Color="#550C1017" Offset="1"/></LinearGradientBrush>
  <SolidColorBrush x:Key="PrimaryAccent" Color="{DynamicResource Theme.primary}"/>
+ <SolidColorBrush x:Key="WallpaperScrim" Color="{DynamicResource Theme.bg}" Opacity="0.35"/>
+ <SolidColorBrush x:Key="HeaderBackdrop" Color="{DynamicResource Theme.bg}" Opacity="0.5"/>
 </ResourceDictionary>
