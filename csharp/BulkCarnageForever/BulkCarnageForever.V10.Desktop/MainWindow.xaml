@@ -190,6 +190,7 @@
      <TextBlock Text="BATTLE STATION" Style="{StaticResource Caption}" FontSize="10" Margin="0,0,0,12"/>
      <ui:Button x:Name="DashboardNav" Content="⌂   Dashboard" Tag="Dashboard" Click="Page_Click" Style="{StaticResource Nav}"/>
      <ui:Button x:Name="OverviewNav" Content="▤   Food Log" Click="Overview_Click" Style="{StaticResource Nav}"/>
+     <ui:Button x:Name="GhostNav" Content="◇   Ghost" Tag="Ghost" Click="Page_Click" Style="{StaticResource Nav}"/>
      <ui:Button x:Name="ProgressNav" Content="↗   Progress" Tag="Progress" Click="Page_Click" Style="{StaticResource Nav}"/>
      <ui:Button x:Name="GoalsNav" Content="◉   TDEE &amp; Goals" Tag="Goals" Click="Page_Click" Style="{StaticResource Nav}"/>
      <ui:Button x:Name="LibraryNav" Content="▦   Food Database" Click="Library_Click" Style="{StaticResource Nav}"/>

@@ -9,7 +9,7 @@ namespace BulkCarnageForever.V10.DAL
     public class AppDbContext : DbContext
     {
         // Increment when the database schema changes.
-        private const int SchemaVersion = 5;
+        private const int SchemaVersion = 8;
 
         private static readonly string DatabasePath = Path.Combine(
             Environment.GetFolderPath(
@@ -25,6 +25,8 @@ namespace BulkCarnageForever.V10.DAL
         public DbSet<NutritionGoal> NutritionGoals => Set<NutritionGoal>();
         public DbSet<WeightEntry> WeightEntries => Set<WeightEntry>();
         public DbSet<FoodFavorite> FoodFavorites => Set<FoodFavorite>();
+        public DbSet<GhostProfile> GhostProfiles => Set<GhostProfile>();
+        public DbSet<GhostMealSimulation> GhostMealSimulations => Set<GhostMealSimulation>();
 
         protected override void OnConfiguring(
             DbContextOptionsBuilder options)
@@ -59,9 +61,40 @@ namespace BulkCarnageForever.V10.DAL
             modelBuilder.Entity<FoodFavorite>().HasOne<UserProfile>().WithMany().HasForeignKey(x => x.UserProfileId).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<FoodFavorite>().HasIndex(x => new { x.UserProfileId, x.FoodName }).IsUnique();
 
+            modelBuilder.Entity<GhostProfile>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+                entity.Property(x => x.Name).IsRequired().HasMaxLength(80);
+                entity.HasOne<UserProfile>().WithMany().HasForeignKey(x => x.UserProfileId).OnDelete(DeleteBehavior.Cascade);
+                // Multiple additional Ghosts are allowed, but only one default per owner.
+                entity.HasIndex(x => x.UserProfileId, "IX_GhostProfiles_DefaultOwner")
+                    .IsUnique().HasFilter("\"IsDefault\" = 1");
+                entity.HasIndex(x => x.UserProfileId, "IX_GhostProfiles_Owner");
+                // Explicit unique indexes also upgrade existing SQLite tables without
+                // rebuilding them; composite simulation FKs use these owner-qualified keys.
+                entity.HasIndex(x => new { x.Id, x.UserProfileId }).IsUnique();
+            });
+
+            modelBuilder.Entity<GhostMealSimulation>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+                entity.Property(x => x.FoodName).IsRequired();
+                entity.Property(x => x.MealType).HasConversion<string>();
+                entity.HasIndex(x => new { x.GhostProfileId, x.MealEntryId }).IsUnique();
+                entity.HasIndex(x => new { x.UserProfileId, x.GhostProfileId, x.Date });
+                entity.HasOne<GhostProfile>().WithMany()
+                    .HasForeignKey(x => new { x.GhostProfileId, x.UserProfileId })
+                    .HasPrincipalKey(x => new { x.Id, x.UserProfileId }).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<MealEntry>().WithMany()
+                    .HasForeignKey(x => new { x.MealEntryId, x.UserProfileId })
+                    .HasPrincipalKey(x => new { x.Id, x.UserProfileId }).OnDelete(DeleteBehavior.Cascade);
+            });
+
             modelBuilder.Entity<MealEntry>(entity =>
             {
                 entity.HasKey(x => x.Id);
+
+                entity.HasIndex(x => new { x.Id, x.UserProfileId }).IsUnique();
 
                 entity.Property(x => x.MealType)
                     .HasConversion<string>();
@@ -108,6 +141,8 @@ namespace BulkCarnageForever.V10.DAL
                 await AddColumn("MealEntries", "UserProfileId", "INTEGER NOT NULL DEFAULT 0");
                 await AddColumn("UserPreferences", "MatureArtworkEnabled", "INTEGER NOT NULL DEFAULT 0");
                 await AddColumn("UserPreferences", "BackgroundPreset", "TEXT NOT NULL DEFAULT 'Theme'");
+                await AddColumn("GhostMealSimulations", "OverrideServings", "REAL NULL");
+                await AddColumn("GhostMealSimulations", "RecalculatedAt", "TEXT NULL");
                 string create = Database.GenerateCreateScript()
                     .Replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
                     .Replace("CREATE UNIQUE INDEX ", "CREATE UNIQUE INDEX IF NOT EXISTS ")
@@ -116,6 +151,12 @@ namespace BulkCarnageForever.V10.DAL
                 if (currentVersion < 5)
                     await Database.ExecuteSqlRawAsync("UPDATE UserPreferences SET Theme = CASE WHEN Theme IN ('Neon', 'NeonNights', 'Neon Nights') THEN 'NeonNights' ELSE 'CarnagePro' END;", ct);
                 if (!await FoodItems.AnyAsync(ct)) await FoodImporter.ImportAsync(this, ct);
+                var ownersWithoutDefaults = await UserProfiles
+                    .Where(user => !GhostProfiles.Any(ghost => ghost.UserProfileId == user.Id && ghost.IsDefault))
+                    .Select(user => user.Id).ToListAsync(ct);
+                var ghosts = new GhostProfileStore(this);
+                foreach (long ownerId in ownersWithoutDefaults)
+                    await ghosts.EnsureDefaultAsync(ownerId, ct);
                 await Database.ExecuteSqlRawAsync($"PRAGMA user_version = {SchemaVersion};", ct);
                 await transaction.CommitAsync(ct);
             }

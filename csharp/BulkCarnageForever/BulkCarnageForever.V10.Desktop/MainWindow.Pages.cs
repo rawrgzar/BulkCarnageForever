@@ -1,4 +1,5 @@
 using BulkCarnageForever.V10.Core.Model;
+using BulkCarnageForever.V10.DAL;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System;
@@ -54,7 +55,7 @@ public partial class MainWindow
         LibraryFilters.Visibility = _library ? Visibility.Visible : Visibility.Collapsed;
         foreach (var (button, page) in new[] { (DashboardNav, "Dashboard"), (OverviewNav, "Food Log"),
             (ProgressNav, "Progress"), (GoalsNav, "Goals"), (LibraryNav, "Food Database"),
-            (ReportsNav, "Reports"), (SettingsNav, "Settings") })
+            (ReportsNav, "Reports"), (GhostNav, "Ghost"), (SettingsNav, "Settings") })
         {
             bool selected = page == _page;
             button.Background = selected ? Palette("AccentSurface") : Brushes.Transparent;
@@ -71,6 +72,7 @@ public partial class MainWindow
             "Progress" => "Your recorded weight and nutrition trends, in focus.",
             "Goals" => "Set your daily energy target and macros. Targets take effect on the selected date.",
             "Reports" => "Discover the foods contributing to your intake. Your selected date sets the end of the period.",
+            "Ghost" => "Named portion scenarios based on foods you logged. Everything stays on this device.",
             _ => "Make it yours. All settings and journal data stay on this device."
         };
         SectionContent.Children.Clear();
@@ -82,6 +84,7 @@ public partial class MainWindow
             case "Progress": BuildProgress(); break;
             case "Reports": BuildReports(); break;
             case "Settings": BuildSettings(); break;
+            case "Ghost": BuildGhosts(); break;
         }
     }
 
@@ -326,7 +329,7 @@ public partial class MainWindow
         storage.Children.Add(Label("Food and meal data use your existing SQLite database. Each local profile has its own goals, theme, favorites, and weight records in SQLite.", 13, "Muted"));
         storage.Children.Add(Label("Weight display follows this profile’s pounds/kilograms preference. Height is entered in feet and inches. Food quantities use servings or the catalog's native measurement unit.", 13, "Muted"));
         storage.Children.Add(Action("Export this profile (JSON)", async () => await ExportSnapshotAsync()));
-        storage.Children.Add(Label("Snapshot export includes catalog, meals, goals, and weight records. Automatic restore is not included in this UI package.", 12, "Muted"));
+        storage.Children.Add(Label("Snapshot export includes referenced foods, meals, goals, weights, favorites, Ghost profiles, saved simulations, and serving overrides. Automatic restore is not included.", 12, "Muted"));
     }
 
     private async Task ExportSnapshotAsync()
@@ -334,14 +337,44 @@ public partial class MainWindow
         if (_profile is null) return;
         try
         {
-            using var db = _database();
-            var ids = _entries.Select(x => x.FoodName).Distinct().ToList();
-            var foods = await db.FoodItems.AsNoTracking().Where(x => ids.Contains(x.RecipeName)).ToListAsync();
-            var snapshot = new { Format = "BulkCarnageForever.ProfileSnapshot", Version = 2, ExportedAt = DateTimeOffset.UtcNow,
-                Profile = _profile, Preferences = _preferences, WeightUnit = _weightUnit, Goals = _goals, Foods = foods, MealEntries = _entries };
-            ExportText("Profile snapshot (*.json)|*.json", $"bulk-carnage-{DateTime.Now:yyyy-MM-dd}.json", JsonSerializer.Serialize(snapshot, new JsonSerializerOptions { WriteIndented = true }));
+            string json = await CreateProfileSnapshotJsonAsync();
+            ExportText("Profile snapshot (*.json)|*.json", $"bulk-carnage-{DateTime.Now:yyyy-MM-dd}.json", json);
         }
         catch (Exception ex) { StatusText.Text = $"Export failed: {ex.Message}"; }
+    }
+
+    internal async Task<string> CreateProfileSnapshotJsonAsync()
+    {
+        // Capture the requested owner/date before awaiting. All exported records and
+        // legacy display preferences come from that owner's persisted snapshot.
+        long owner = _profile?.Id ?? throw new InvalidOperationException("Open a local profile before exporting.");
+        var trackingDate = DateOnly.FromDateTime(_day);
+        var saved = await new ProfileSnapshotStore(_database).ReadAsync(owner);
+        var preferences = new JournalPreferences
+        {
+            Theme = saved.Preferences?.Theme ?? "CarnagePro",
+            MatureArtworkEnabled = saved.Preferences?.MatureArtworkEnabled ?? false,
+            BackgroundPreset = saved.Preferences?.BackgroundPreset ?? "Theme",
+            LastMeal = saved.Preferences?.LastMeal ?? MealType.Breakfast,
+            Favorites = saved.FoodFavorites.Select(x => x.FoodName).ToList(),
+            Weights = saved.WeightEntries.Select(x => new JournalWeightEntry { Date = x.Date, Kg = x.WeightKg }).ToList()
+        };
+        preferences.Normalize();
+        var goal = saved.Goals.LastOrDefault(x => x.EffectiveFrom <= trackingDate);
+        if (goal is not null)
+        {
+            preferences.Calories = goal.Calories; preferences.Protein = goal.Protein;
+            preferences.Carbs = goal.Carbs; preferences.Fat = goal.Fats;
+            preferences.Tdee = goal.Tdee; preferences.Adjustment = goal.CalorieAdjustment; preferences.Goal = goal.Goal.ToString();
+        }
+        var snapshot = new
+        {
+            Format = "BulkCarnageForever.ProfileSnapshot", Version = 3, saved.ExportedAt, TrackingDate = trackingDate,
+            saved.Profile, Preferences = preferences, WeightUnit = saved.Preferences?.WeightUnit,
+            saved.Goals, saved.Foods, saved.MealEntries, SavedPreferences = saved.Preferences,
+            saved.WeightEntries, saved.FoodFavorites, saved.GhostProfiles, saved.GhostMealSimulations
+        };
+        return JsonSerializer.Serialize(snapshot, new JsonSerializerOptions { WriteIndented = true });
     }
 
     private void ExportText(string filter, string fileName, string content)

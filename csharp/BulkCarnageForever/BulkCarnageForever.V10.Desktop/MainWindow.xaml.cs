@@ -340,9 +340,7 @@ public partial class MainWindow : Window
         var entry = new MealEntry { UserProfileId = _profile!.Id, Date = DateOnly.FromDateTime(_day), MealType = meal, FoodName = _selected.RecipeName, AmountEaten = amount };
         try
         {
-            await using var db = _database();
-            db.MealEntries.Add(entry);
-            await db.SaveChangesAsync();
+            entry = await new GhostMealStore(_database).LogAsync(entry.UserProfileId, entry);
             _entries.Add(entry);
             _lastAdded = entry.Id;
             UndoButton.Visibility = Visibility.Visible;
@@ -370,9 +368,7 @@ public partial class MainWindow : Window
         UpdatePreview();
         try
         {
-            await using var db = _database();
-            var entry = await db.MealEntries.FirstOrDefaultAsync(x => x.Id == id && x.UserProfileId == _profile!.Id);
-            if (entry is not null) { db.MealEntries.Remove(entry); await db.SaveChangesAsync(); }
+            await new GhostMealStore(_database).RemoveAsync(_profile!.Id, id);
             _entries.RemoveAll(x => x.Id == id);
             if (_lastAdded == id) { _lastAdded = null; UndoButton.Visibility = Visibility.Collapsed; }
             Render(); RefreshSearch();

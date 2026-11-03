@@ -1,4 +1,5 @@
 using BulkCarnageForever.V10.Core.Model;
+using BulkCarnageForever.V10.DAL;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -95,7 +96,9 @@ public partial class MainWindow
             db.WeightEntries.AddRange(legacy.Weights.Select(x => new WeightEntry { UserProfileId = profile.Id, Date = x.Date, WeightKg = x.Kg }));
             await db.MealEntries.Where(x => x.UserProfileId == 0).ExecuteUpdateAsync(setters => setters.SetProperty(x => x.UserProfileId, profile.Id));
         }
-        await db.SaveChangesAsync(); await transaction.CommitAsync();
+        await db.SaveChangesAsync();
+        await new GhostProfileStore(db).EnsureDefaultAsync(profile.Id);
+        await transaction.CommitAsync();
         _profiles = await db.UserProfiles.AsNoTracking().OrderBy(x => x.Id).ToListAsync();
         await SwitchProfileAsync(profile.Id);
         return profile.Id;

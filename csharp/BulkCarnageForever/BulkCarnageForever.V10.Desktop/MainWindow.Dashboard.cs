@@ -35,6 +35,8 @@ public partial class MainWindow
         quick.Children.Add(Action("TDEE & goals", () => Navigate("Goals")));
         quick.Children.Add(Action("Discover your intake", () => Navigate("Reports"))); SectionContent.Children.Add(quick);
 
+        BuildGhostComparison();
+
         var row = new Grid(); row.ColumnDefinitions.Add(new ColumnDefinition()); row.ColumnDefinitions.Add(new ColumnDefinition()); SectionContent.Children.Add(row);
         var mealCard = Card(row, "Your meals"); mealCard.Margin = new Thickness(0, 0, 12, 16); var meals = (StackPanel)mealCard.Child;
         foreach (var meal in Enum.GetValues<MealType>())
